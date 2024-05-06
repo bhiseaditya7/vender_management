@@ -137,21 +137,21 @@ def calculate_average_response_time(vendor):
     completed_orders = PO_Model.objects.filter(vendor=vendor, status='completed', acknowledgment_date__isnull=False)
     total_completed_orders = completed_orders.count()
 
-    # If there are no completed orders or all completed orders have null acknowledgment_date, return 0
+   
     if total_completed_orders == 0:
         return 0
     
     total_response_time = timedelta()
 
-    # Calculate the total response time
+    
     for order in completed_orders:
         if order.acknowledgment_date:
             total_response_time += order.acknowledgment_date - order.issue_date
 
-    # Calculate the average response time
+  
     average_response_time = total_response_time.total_seconds() / total_completed_orders
 
-    # Save the calculated average response time as historical performance
+    
     save_historical_performance(vendor, 'average_response_time', average_response_time)
     
     return average_response_time
