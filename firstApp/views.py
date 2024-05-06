@@ -9,7 +9,7 @@ from rest_framework import generics,mixins
 
 from django.db.models import Avg, Count
 from django.utils import timezone
-from datetime import date
+from datetime import date,timedelta
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -57,7 +57,7 @@ class PurchaseOrderList(mixins.ListModelMixin,mixins.CreateModelMixin,generics.G
     def post(self,request):
         return self.create(request)
     
-    permission_classes=[IsAuthenticated]
+    
     
 class PurchaseOrderDetails(mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin,generics.GenericAPIView):
 
@@ -135,18 +135,25 @@ def save_historical_performance(vendor, metric, value):
 
 def calculate_average_response_time(vendor):
     completed_orders = PO_Model.objects.filter(vendor=vendor, status='completed', acknowledgment_date__isnull=False)
-    if completed_orders.count() == 0:
+    total_completed_orders = completed_orders.count()
+
+    # If there are no completed orders or all completed orders have null acknowledgment_date, return 0
+    if total_completed_orders == 0:
         return 0
-    total_response_time = 0
-    valid_orders_count = 0
-    for po in completed_orders:
-        if po.acknowledgment_date:
-            total_response_time += (po.acknowledgment_date - po.issue_date).total_seconds()
-            valid_orders_count += 1
-    if valid_orders_count == 0:
-        return 0
-    average_response_time = total_response_time / valid_orders_count
+    
+    total_response_time = timedelta()
+
+    # Calculate the total response time
+    for order in completed_orders:
+        if order.acknowledgment_date:
+            total_response_time += order.acknowledgment_date - order.issue_date
+
+    # Calculate the average response time
+    average_response_time = total_response_time.total_seconds() / total_completed_orders
+
+    # Save the calculated average response time as historical performance
     save_historical_performance(vendor, 'average_response_time', average_response_time)
+    
     return average_response_time
 
 

@@ -33,7 +33,7 @@ class PO_Model(models.Model):
     status=models.CharField(max_length=20,choices=STATUS_CHOICES, default='pending')
     quality_rating=models.FloatField(null=True)
     issue_date=models.DateTimeField()
-    acknowledgement_date=models.DateTimeField(null=True)
+    acknowledgment_date=models.DateTimeField(null=True)
 
 
 
